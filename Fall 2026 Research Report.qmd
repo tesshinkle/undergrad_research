@@ -1,0 +1,34 @@
+---
+title: "Fall 2026 Research Report"
+author: "Tess Hinkle"
+format: html
+editor: visual
+---
+
+## Research Ideas
+
+Idea One:\
+I want to continue what I did in the spring with either more sports and comparing the ages with best success while also implementing training and testing with my past model as well as checking accuracy of my past model (AUC, ROC, Confusion Matrix, etc.) I also want to add variables into my F1 model from the spring such as how often a driver switched teams( whether they've been on one team their entire career or like 5). Also I want to add in the variable of the length they stay at each team, whether thats the average or some other measure.
+
+Idea Two:\
+If I finish that early I do want to start looking back on what I was attempting to do Spring 2025. WHere I was trying to predict the number of pitstops in a race. I think I have a better handle on handling the API and just APIs in general. Also AWS came out with an arcticel about how they created something similar. Of course it's with proprietary data so I think it would be interesting if I could recreate it with public data, or recreate it as close as possible.
+
+Ultimately, I do want to start using the F1dataR package and API more and potentially other sport APIs if i go with idea number one.
+
+## Starting Code
+
+I am doing a quarto document because I feel like I can better discuss my insights and graphs through this but will have a raw code script because I only want my final code in this quarto document
+
+```{r}
+#| echo: false
+require(f1dataR)
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
