@@ -2,6 +2,7 @@
 
 require(f1dataR)
 require(tidyverse)
+require(reticulate)
 
 theme_set(theme_bw())
 
@@ -53,3 +54,5 @@ champ_data_16_25 |>
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points, colour = constructor_id)) + 
   geom_point(position = position_jitter(), alpha = 0.5, size = 3) 
+
+py_require("indycarpy")
