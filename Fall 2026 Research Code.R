@@ -2,7 +2,8 @@
 
 require(f1dataR)
 require(tidyverse)
-require(reticulate)
+require(mgcv)
+#require(reticulate)
 
 theme_set(theme_bw())
 
@@ -34,6 +35,8 @@ constructor_data = bind_rows(lapply(2016:2025, function(x){
     mutate(season = x)
   }))
 
+summary(champ_data_16_25)
+
 champ_data_16_25 = left_join(champ_data_16_25, constructor_data, by = c("constructor_id", "season")) |>
   rename(driver_points = points.x, driver_position = position.x,
          driver_wins = wins.x, constructor_pos = position.y,
@@ -42,7 +45,7 @@ champ_data_16_25 = left_join(champ_data_16_25, constructor_data, by = c("constru
 #Original Scatter plot from spring but nicer 
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points)) + geom_point(col = "green2", size = 2.5) + geom_jitter(alpha = 0.5, size = 3)
-#the scatter plot shows a potential bimodal trend that could be just one peak 
+#the scatter plot shows a potential bi-modal trend that could be just one peak 
 #however we do have a pretty clean cut-off at about age 37 where the driver 
 #does not get above 300 points
 
@@ -55,4 +58,32 @@ champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points, colour = constructor_id)) + 
   geom_point(position = position_jitter(), alpha = 0.5, size = 3) 
 
-py_require("indycarpy")
+champ_data_16_25 = champ_data_16_25 |>
+  mutate(constructor_group = case_when(constructor_pos == "1" ~ "top_three",
+                                       constructor_pos == "2" ~ "top_three",
+                                       constructor_pos == "3" ~ "top_three",
+                                       constructor_pos == "8" ~ "bottom_field",
+                                       constructor_pos == "9" ~ "bottom_field",
+                                       constructor_pos == "10" ~ "bottom_field",
+                                       constructor_pos == "11" ~ "bottom_field",
+                                       constructor_pos >= "4" | constructor_pos <= "7" ~ "mid_field")) |>
+  mutate(constructor_group = as.factor(constructor_group)) |>
+  mutate(driver_id = as.factor(driver_id))
+
+champ_data_16_25 |>
+  ggplot(aes(driver_age, driver_points, colour = constructor_group)) +
+  geom_point(position = position_jitter(), alpha = 0.5, size = 3)
+#We can see an overlapping in the mid-field teams and top three teams. 
+#The drivers in the mid-field that are matching several top team drivers 
+#I would estimate as having the potential to move to a top three team or that 
+#team was competing with the top three teams as a fourth team (currently happening)
+#The top three team drivers that are on the lower end of the points, I would 
+#estimate to be dropped by the team 
+
+#Practice model one
+f1.mod1 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + s(constructor_group, bs= "re"),
+              data = champ_data_16_25, method = "REML")
+
+summary(f1.mod1)
+
+#py_require("indycarpy") #package doesn't work
