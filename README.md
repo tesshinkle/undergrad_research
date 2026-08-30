@@ -12,5 +12,7 @@ Hypothesis: The age of Formula One drivers impacts the total amount of points th
 * A Linear Mixed Model (LMM) was chosen because of the repeated measures
 * The LMM was combined with the generalized additive model (GAM) because of the non-linear trend in the scatterplot of the data
 * Several models were created and an AIC table was used to determine which model was the best fit
-**Results/Conclusion** 
+
+**Results/Conclusion**
+
 Using the alpha-level 0.05, the predictor variable age is a significant predictor. However, the predictor Season and the interaction between age and Season were not significant predictors of driver success.
