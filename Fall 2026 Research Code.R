@@ -68,7 +68,8 @@ champ_data_16_25 = champ_data_16_25 |>
                                        constructor_pos == "11" ~ "bottom_field",
                                        constructor_pos >= "4" | constructor_pos <= "7" ~ "mid_field")) |>
   mutate(constructor_group = as.factor(constructor_group)) |>
-  mutate(driver_id = as.factor(driver_id))
+  mutate(driver_id = as.factor(driver_id)) |>
+  mutate(constructor_id = as.factor(constructor_id))
 
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points, colour = constructor_group)) +
@@ -80,10 +81,18 @@ champ_data_16_25 |>
 #The top three team drivers that are on the lower end of the points, I would 
 #estimate to be dropped by the team 
 
-#Practice model one
+#Practice models
+control.mod = gam(driver_points~s(driver_age)+s(driver_id,bs="re")+s(Season,bs="re")+s(driver_age,driver_id,bs="re")+s(driver_id,Season,bs="re"),
+                  data = champ_data_16_25,method="REML")
+summary(control.mod)
+summary(control.mod)$s.table
+
 f1.mod1 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + s(constructor_group, bs= "re"),
               data = champ_data_16_25, method = "REML")
+summary(f1.mod1) #already has a smaller REML compared to control model
 
-summary(f1.mod1)
+f1.mod2 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + s(constructor_id, bs= "re"),
+              data = champ_data_16_25, method = "REML")
+summary(f1.mod2) #separating by teams themselves does not explain the deviance better
 
 #py_require("indycarpy") #package doesn't work
