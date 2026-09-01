@@ -3,6 +3,7 @@
 require(f1dataR)
 require(tidyverse)
 require(mgcv)
+require(rsample)
 #require(reticulate)
 
 theme_set(theme_bw())
@@ -71,6 +72,20 @@ champ_data_16_25 = champ_data_16_25 |>
   mutate(driver_id = as.factor(driver_id)) |>
   mutate(constructor_id = as.factor(constructor_id))
 
+champ_data_16_25 = champ_data_16_25 |>
+  group_by(driver_id) |>
+  mutate(n_teams = n_distinct(constructor_id)) |>
+  ungroup()
+
+longevity_data = champ_data_16_25 |>
+  group_by(driver_id, constructor_id) |>
+  summarize(years_at_team = n() , .groups = "drop")|>
+  ungroup()
+
+champ_data_16_25 = left_join(champ_data_16_25, longevity_data, 
+                             by = c("driver_id", "constructor_id"), 
+                             relationship = "many-to-many")
+
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points, colour = constructor_group)) +
   geom_point(position = position_jitter(), alpha = 0.5, size = 3)
@@ -94,5 +109,18 @@ summary(f1.mod1) #already has a smaller REML compared to control model
 f1.mod2 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + s(constructor_id, bs= "re"),
               data = champ_data_16_25, method = "REML")
 summary(f1.mod2) #separating by teams themselves does not explain the deviance better
+
+f1.mod3 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
+                s(constructor_group, bs= "re") + years_at_team,
+              data = champ_data_16_25, method = "REML")
+summary(f1.mod3) 
+#years_at_team is a significant predictor however it lowers 
+#deviance explained but by only 0.2%
+
+
+#training set
+set.seed(090126) #from the date
+
+
 
 #py_require("indycarpy") #package doesn't work
