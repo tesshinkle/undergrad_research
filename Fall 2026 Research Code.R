@@ -70,7 +70,8 @@ champ_data_16_25 = champ_data_16_25 |>
                                        constructor_pos >= "4" | constructor_pos <= "7" ~ "mid_field")) |>
   mutate(constructor_group = as.factor(constructor_group)) |>
   mutate(driver_id = as.factor(driver_id)) |>
-  mutate(constructor_id = as.factor(constructor_id))
+  mutate(constructor_id = as.factor(constructor_id)) |>
+  mutate(season = as.factor(season))
 
 champ_data_16_25 = champ_data_16_25 |>
   group_by(driver_id) |>
@@ -118,9 +119,16 @@ summary(f1.mod3)
 #deviance explained but by only 0.2%
 
 
-#training set
+#training set/ cross-validation since the data set is small
 set.seed(090126) #from the date
 
+cv_splits = vfold_cv(champ_data_16_25, v = 5, repeats = 2, strata = season)
+print(cv_splits)
 
+first_split = cv_splits$splits[[1]]
+
+train_data = analysis(first_split)
+
+train_data2 = training(first_split)
 
 #py_require("indycarpy") #package doesn't work
