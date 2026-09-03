@@ -97,6 +97,10 @@ champ_data_16_25 |>
 #The top three team drivers that are on the lower end of the points, I would 
 #estimate to be dropped by the team 
 
+champ_data_16_25 |>
+  ggplot(aes(years_at_team, driver_points)) + 
+  geom_point(position = position_jitter(), alpha = 0.5, size = 3)
+
 #Practice models
 control.mod = gam(driver_points~s(driver_age)+s(driver_id,bs="re")+s(Season,bs="re")+s(driver_age,driver_id,bs="re")+s(driver_id,Season,bs="re"),
                   data = champ_data_16_25,method="REML")
