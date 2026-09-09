@@ -1,6 +1,7 @@
 #Fall 2026
 
 require(f1dataR)
+require(nascaR.data)
 require(tidyverse)
 require(mgcv)
 require(rsample)
@@ -102,6 +103,7 @@ champ_data_16_25 |>
   geom_point(position = position_jitter(), alpha = 0.5, size = 3)
 
 #Practice models
+#model from spring, baseline model
 control.mod = gam(driver_points~s(driver_age)+s(driver_id,bs="re")+s(Season,bs="re")+s(driver_age,driver_id,bs="re")+s(driver_id,Season,bs="re"),
                   data = champ_data_16_25,method="REML")
 summary(control.mod)
@@ -126,13 +128,16 @@ summary(f1.mod3)
 #training set/ cross-validation since the data set is small
 set.seed(090126) #from the date
 
-cv_splits = vfold_cv(champ_data_16_25, v = 5, repeats = 2, strata = season)
-print(cv_splits)
+require(caret)
 
-first_split = cv_splits$splits[[1]]
 
-train_data = analysis(first_split)
 
-train_data2 = training(first_split)
+##NASCAR data----
 
-#py_require("indycarpy") #package doesn't work
+series_data = load_series("cup") |>
+  filter(Season > 2016) |>
+  select(-c("S1", "S2", "S3"))
+
+final_series_data = series_data |>
+  group_by(Driver, Season) |>
+  summarise(points = sum(Pts), .groups = "drop")
