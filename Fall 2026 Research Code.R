@@ -4,7 +4,7 @@ require(f1dataR)
 require(nascaR.data)
 require(tidyverse)
 require(mgcv)
-require(rsample)
+require(caret)
 #require(reticulate)
 
 theme_set(theme_bw())
@@ -135,9 +135,14 @@ require(caret)
 ##NASCAR data----
 
 series_data = load_series("cup") |>
-  filter(Season > 2016) |>
-  select(-c("S1", "S2", "S3"))
+  filter(Season >= 2016 & Season <= 2025) |>
+  select(-c("S1", "S2", "S3", "Track", "Name")) |>
+  group_by(Season) |>
+  filter(Race == max(Race)) |> #gets the data for just the last race of the season
+  ungroup()
 
-final_series_data = series_data |>
+final_series_data = load_series("cup") |>
+  filter(Season >= 2016 & Season <= 2025) |>
   group_by(Driver, Season) |>
   summarise(points = sum(Pts), .groups = "drop")
+
