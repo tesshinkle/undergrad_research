@@ -138,11 +138,22 @@ series_data = load_series("cup") |>
   filter(Season >= 2016 & Season <= 2025) |>
   select(-c("S1", "S2", "S3", "Track", "Name")) |>
   group_by(Season) |>
-  filter(Race == max(Race)) |> #gets the data for just the last race of the season
+  filter(Race == max(Race)) |>#gets the data for just the last race of the season
   ungroup()
 
 final_series_data = load_series("cup") |>
   filter(Season >= 2016 & Season <= 2025) |>
   group_by(Driver, Season) |>
-  summarise(points = sum(Pts), .groups = "drop")
+  summarise(points = sum(Pts),
+            avg_finish = mean(Finish, na.rm = TRUE),
+            .groups = "drop")
 
+nascar_data = left_join(series_data,final_series_data, by = c("Driver", "Season"))
+
+summary(nascar_data)
+
+#need to get years a team and number of teams
+
+# Either Indycar or MotoGP data (from an API)
+require(httr2)
+require(jsonlite)
