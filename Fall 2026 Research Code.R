@@ -150,9 +150,53 @@ final_series_data = load_series("cup") |>
 
 nascar_data = left_join(series_data,final_series_data, by = c("Driver", "Season"))
 
+nascar_longevity = series_data |>
+  group_by(Driver, Team) |>
+  summarize(years_at_team = n() , .groups = "drop")|>
+  ungroup()
+summary(nascar_longevity)
+
+nascar_data = left_join(nascar_data, nascar_longevity, by = c("Driver", "Team"))
+
 summary(nascar_data)
 
-#need to get years a team and number of teams
+
+#loading driver info for 2016-2025
+full_series_data = load_series("cup") |>
+  filter(Season >= 2016 & Season <= 2025)
+
+driver_list = final_series_data |>
+  distinct(Driver) |>
+  pull(Driver)
+  
+nascar_driver_info = map_df(driver_list, function(driver_name){
+  get_driver_info(driver = driver_name,
+                  series = "cup", 
+                  type = "season",
+                  interactive = FALSE)
+}) |>
+  filter(Season >= 2016 & Season <= 2025)
+
+##The driver info function did not include birthdates so an API is being used
+
+nascar_url = "https://feed.nascar.com/api/DriverSummary?"
+
+response = request(nascar_url) |>
+  req_perform()
+
+resp_content_type(response)
+
+json_data = response |>
+  resp_body_string() |>
+  fromJSON(flatten = TRUE)
+
+nascar.mod = gam(points~ s(Driver, bs = "re"))
+
+
+view(driver_list)
+
+
+#need to get years at team and number of teams, and driver age
 
 # Either Indycar or MotoGP data (from an API)
 require(httr2)
