@@ -194,7 +194,7 @@ nascar.mod = gam(points~ s(Driver, bs = "re"))
 
 
 view(driver_list)
-
+write.csv(driver_list, "nascar_drvier_list.csv", row.names = FALSE)
 
 #need to get years at team and number of teams, and driver age
 
