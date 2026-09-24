@@ -190,21 +190,26 @@ json_data = response |>
   resp_body_string() |>
   fromJSON(flatten = TRUE)
 
-nascar.mod = gam(points~ s(Driver, bs = "re"))
-
 
 view(driver_list)
 write.csv(driver_list, "nascar_drvier_list.csv", row.names = FALSE)
 
-nascar_driver_dob_list = readxl::read_excel("nascar_drvier_dob_list.xlsx")
+nascar_driver_dob_list = readxl::read_excel("nascar_driver_dob_list.xlsx")
 
 nascar_data = left_join(nascar_data, nascar_driver_dob_list, by = c("Driver"))
 
 nascar_data = nascar_data |>
-  mutate(Age = (Season - as.numeric(format(as.Date(DOB), "%Y"))))
+  mutate(Age = (Season - as.numeric(format(as.Date(DOB), "%Y")))) |>
+  mutate(Driver = as.factor(Driver))
 
 summary(nascar_data$Age)
 summary(champ_data_16_25$driver_age)
+
+str(nascar_data)
+
+nascar.mod = gam(points~ s(Age) + s(Driver, bs= "re"), 
+                 data = nascar_data, method = "REML")
+summary(nascar.mod)
 
 #need to get years at team and number of teams, and driver age
 
