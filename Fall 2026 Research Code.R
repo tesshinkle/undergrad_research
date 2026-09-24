@@ -9,6 +9,7 @@ require(caret)
 
 theme_set(theme_bw())
 
+##Formula One Data----
 #retrieving the final driver's championship points for each season 2016-2025
 champ_data = bind_rows(lapply(2016:2025, function(x) {
     load_standings( season = x, round = "last", type = "driver") |>
@@ -125,7 +126,7 @@ summary(f1.mod3)
 #deviance explained but by only 0.2%
 
 
-#training set/ cross-validation since the data set is small
+#training set/ K- Fold cross-validation since the data set is small
 set.seed(090126) #from the date
 
 require(caret)
@@ -189,7 +190,7 @@ nascar_driver_info = map_df(driver_list, function(driver_name){
   filter(Season >= 2016 & Season <= 2025)
 
 ##The driver info function did not include birthdates so an API is being used
-
+###Don't look----
 nascar_url = "https://feed.nascar.com/api/DriverSummary?"
 
 response = request(nascar_url) |>
@@ -200,7 +201,7 @@ resp_content_type(response)
 json_data = response |>
   resp_body_string() |>
   fromJSON(flatten = TRUE)
-
+###----
 
 view(driver_list)
 write.csv(driver_list, "nascar_drvier_list.csv", row.names = FALSE)
@@ -218,9 +219,14 @@ summary(champ_data_16_25$driver_age)
 
 str(nascar_data)
 
+###NASCAR modeling----
 nascar.mod = gam(points~ s(Age) + s(Driver, bs= "re"), 
                  data = nascar_data, method = "REML")
 summary(nascar.mod)
+
+nascar.mod2 = gam(points~ s(Age) + s(Driver, bs= "re") + s(years_at_team), 
+                  data = nascar_data, method = "REML")
+summary(nascar.mod2)
 
 #need to get years at team and number of teams, and driver age
 
