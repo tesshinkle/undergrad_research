@@ -130,6 +130,17 @@ set.seed(090126) #from the date
 
 require(caret)
 
+train_controlKFCV = trainControl(method="cv", 
+                                  number=52,
+                                  classProbs=TRUE)
+
+f1.mod.cv = train(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
+                     s(constructor_group, bs= "re") + years_at_team,
+                      data=champ_data_16_25,
+                      trControl=train_controlKFCV,
+                      method="gam")
+print(f1.mod.cv)
+
 
 
 ##NASCAR data----
@@ -213,6 +224,8 @@ summary(nascar.mod)
 
 #need to get years at team and number of teams, and driver age
 
+
+##Third Motorsport----
 # Either Indycar or MotoGP data (from an API)
 require(httr2)
 require(jsonlite)
