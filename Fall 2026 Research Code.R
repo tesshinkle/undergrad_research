@@ -240,6 +240,8 @@ summary(nascar.mod2)
 
 #need to get years at team and number of teams, and driver age
 
+summary(cv(nascar.mod2, k = 87,clusterVariables = "Driver", seed = 9252026))
+
 
 ##Third Motorsport----
 # Either Indycar or MotoGP data (from an API)
