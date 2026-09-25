@@ -92,12 +92,14 @@ champ_data_16_25 = left_join(champ_data_16_25, longevity_data,
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points, colour = constructor_group)) +
   geom_point(position = position_jitter(), alpha = 0.5, size = 3)
-#We can see an overlapping in the mid-field teams and top three teams. 
-#The drivers in the mid-field that are matching several top team drivers 
-#I would estimate as having the potential to move to a top three team or that 
-#team was competing with the top three teams as a fourth team (currently happening)
-#The top three team drivers that are on the lower end of the points, I would 
-#estimate to be dropped by the team 
+
+##We can see an overlapping in the mid-field teams and top three teams. 
+##The drivers in the mid-field that are matching several top team drivers 
+##I would estimate as having the potential to move to a top three team or that 
+##team was competing with the top three teams as a fourth team (currently happening)
+##The top three team drivers that are on the lower end of the points, I would 
+##estimate to be dropped by the team 
+
 
 champ_data_16_25 |>
   ggplot(aes(years_at_team, driver_points)) + 
@@ -141,6 +143,14 @@ f1.mod.cv = train(driver_points ~ s(driver_age) + s(driver_id, bs = "re") +
                       trControl=train_controlKFCV,
                       method="gam")
 print(f1.mod.cv)
+
+
+require(cv)
+
+model.f1 = f1.mod3
+
+summary(cv::cv(model.f1, k = 52, clusterVariables = "driver_id", seed = 92526))
+#criterion way too big, criterion almost 4000.
 
 
 
