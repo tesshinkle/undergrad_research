@@ -133,25 +133,27 @@ set.seed(090126) #from the date
 
 require(caret)
 
-train_controlKFCV = trainControl(method="cv", 
-                                  number=52,
-                                  classProbs=TRUE)
-
-f1.mod.cv = train(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
-                     s(constructor_group, bs= "re") + years_at_team,
-                      data=champ_data_16_25,
-                      trControl=train_controlKFCV,
-                      method="gam")
-print(f1.mod.cv)
-
-
 require(cv)
 
 model.f1 = f1.mod3
+summary(model.f1$gam)
 
-summary(cv::cv(model.f1, k = 52, clusterVariables = "driver_id", seed = 92526))
-#criterion way too big, criterion almost 4000.
+model.f1_cv.results = cv::cv(model.f1, criterion = rmse, k = 10, 
+                             clusterVariables = "driver_id", 
+                             predict.clusters.args = list(allow.new.levels = TRUE),
+                             seed = 92526)
 
+summary(model.f1_cv.results)
+
+f1cv.ratio = (model.f1_cv.results[["CV crit"]])/(model.f1_cv.results[["full crit"]])
+f1cv.ratio #ration slightly larger than 1
+
+
+
+#yprob <- predict(diabetes.model,newdata=Pima.te,type="response")
+#yhat <- factor(ifelse(yprob>0.5,"Yes","No"))
+#y <- Pima.te$type
+#caret::confusionMatrix(yhat,y)
 
 
 ##NASCAR data----
@@ -240,10 +242,49 @@ summary(nascar.mod2)
 
 #need to get years at team and number of teams, and driver age
 
-summary(cv(nascar.mod2, k = 87,clusterVariables = "Driver", seed = 9252026))
+nascar.mod2.cv_results = cv(nascar.mod2, criterion = rmse, k = 10,
+                                   clusterVariables = "Driver",
+                                   predict.clusters.args = list(allow.new.levels = TRUE), 
+                                   seed = 9252026)
+summary(nascar.mod2.cv_results)
+
+nascarcv.ratio = nascar.mod2.cv_results[["CV crit"]]/nascar.mod2.cv_results[["full crit"]]
+nascarcv.ratio # more overfitting than f1 cv but still need to add variables.
 
 
 ##Third Motorsport----
 # Either Indycar or MotoGP data (from an API)
 require(httr2)
+require(httr)
 require(jsonlite)
+
+
+req = request("https://api.motogp.pulselive.com/motogp/v1")
+req
+
+resp = req_perform(req)
+resp
+
+httr::GET("https://api.motogp.pulselive.com/motogp/v1")
+
+seasons = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/seasons")
+
+seasons = content(seasons, as = "text", encoding = "UTF-8") |>
+  fromJSON()
+
+motogp_seasons = seasons |>
+  filter(year >=2016 & year < 2026) |>
+  select(-c(name,current))
+
+categories25 = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/categories?seasonUuid=ae6c6f0d-c652-44f8-94aa-420fc5b3dab4")
+
+categories25 = content(categories25, as = "text", encoding = "UTF-8") |>
+  fromJSON()
+
+##CHange the below code.
+season_uuid = motogp_seasons |>
+  distinct(id) |>
+  pull(id)
+
+events = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/events", 
+                   query = list(seasonUuid = season_uuid))
