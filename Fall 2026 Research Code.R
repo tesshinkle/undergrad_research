@@ -5,6 +5,7 @@ require(nascaR.data)
 require(tidyverse)
 require(mgcv)
 require(caret)
+require(lme4)
 #require(reticulate)
 
 theme_set(theme_bw())
@@ -127,6 +128,15 @@ summary(f1.mod3)
 #years_at_team is a significant predictor however it lowers 
 #deviance explained but by only 0.2%
 
+f1lmermod = lmer(driver_points ~ driver_age + (1|driver_id) + 
+                   (1|constructor_group) + years_at_team,
+                 data = champ_data_16_25)
+summary(f1lmermod)
+
+f1lmmod = lm(driver_points ~ driver_age + driver_id + 
+               constructor_group + years_at_team,
+             data = champ_data_16_25)
+summary(f1lmmod)
 
 #training set/ K- Fold cross-validation since the data set is small
 set.seed(090126) #from the date
@@ -148,7 +158,23 @@ summary(model.f1_cv.results)
 f1cv.ratio = (model.f1_cv.results[["CV crit"]])/(model.f1_cv.results[["full crit"]])
 f1cv.ratio #ration slightly larger than 1
 
+lmemod.f1 = f1lmermod
+lmef1.model_cv.results = cv::cv(lmemod.f1, criterion = rmse, k = 10,
+                                clusterVariables = "driver_id",
+                                seed = 10426)
+summary(lmef1.model_cv.results)
 
+f1lmecv.ratio = (lmef1.model_cv.results[["CV crit"]])/(lmef1.model_cv.results[["full crit"]])
+f1lmecv.ratio
+
+#error in trying to get cv for linear model
+lm.f1 = f1lmmod
+lmf1.model_cv.results = cv::cv(lm.f1, criterion = rmse, k = 52,
+                                seed = 10426)
+summary(lmf1.model_cv.results)
+
+f1lmcv.ratio = (lmf1.model_cv.results[["CV crit"]])/(lmf1.model_cv.results[["full crit"]])
+f1lmcv.ratio
 
 #yprob <- predict(diabetes.model,newdata=Pima.te,type="response")
 #yhat <- factor(ifelse(yprob>0.5,"Yes","No"))
@@ -185,6 +211,26 @@ nascar_data = left_join(nascar_data, nascar_longevity, by = c("Driver", "Team"))
 summary(nascar_data)
 
 
+team_points_16_25 = load_series("cup") |>
+  filter(Season >= 2016 & Season <= 2025) |>
+  group_by(Season, Team) |>
+  summarize(
+    total_races   = n(),
+    total_wins    = sum(Finish == 1, na.rm = TRUE),
+    laps_led      = sum(Led, na.rm = TRUE),
+    avg_finish    = mean(Finish, na.rm = TRUE),
+    total_points  = sum(Pts, sa.rm = TRUE),
+    .groups = "drop"
+  )
+
+str(team_points_16_25)
+summary(team_points_16_25$total_points)
+
+team_points_16_25 |> 
+  ggplot(aes(total_points)) + geom_boxplot()
+#may do a cluster analysis to define groups for team fields
+
+
 #loading driver info for 2016-2025
 full_series_data = load_series("cup") |>
   filter(Season >= 2016 & Season <= 2025)
@@ -201,18 +247,8 @@ nascar_driver_info = map_df(driver_list, function(driver_name){
 }) |>
   filter(Season >= 2016 & Season <= 2025)
 
-##The driver info function did not include birthdates so an API is being used
-###Don't look----
-nascar_url = "https://feed.nascar.com/api/DriverSummary?"
+##The driver info function did not include birth dates so they are being manually entered
 
-response = request(nascar_url) |>
-  req_perform()
-
-resp_content_type(response)
-
-json_data = response |>
-  resp_body_string() |>
-  fromJSON(flatten = TRUE)
 ###----
 
 view(driver_list)
@@ -231,6 +267,9 @@ summary(champ_data_16_25$driver_age)
 
 str(nascar_data)
 
+#Trying to get manufacturer data
+
+
 ###NASCAR modeling----
 nascar.mod = gam(points~ s(Age) + s(Driver, bs= "re"), 
                  data = nascar_data, method = "REML")
@@ -239,6 +278,8 @@ summary(nascar.mod)
 nascar.mod2 = gam(points~ s(Age) + s(Driver, bs= "re") + s(years_at_team), 
                   data = nascar_data, method = "REML")
 summary(nascar.mod2)
+
+nascar.mod3 = gam(points~s(Age))
 
 #need to get years at team and number of teams, and driver age
 
@@ -281,7 +322,7 @@ categories25 = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/cat
 categories25 = content(categories25, as = "text", encoding = "UTF-8") |>
   fromJSON()
 
-##CHange the below code.
+##Change the below code.
 season_uuid = motogp_seasons |>
   distinct(id) |>
   pull(id)
