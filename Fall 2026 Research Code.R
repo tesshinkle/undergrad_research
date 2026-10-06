@@ -230,6 +230,40 @@ team_points_16_25 |>
   ggplot(aes(total_points)) + geom_boxplot()
 #may do a cluster analysis to define groups for team fields
 
+#K-means clusters decided because I want 3 clusters
+require(classInt)
+set.seed(91)
+pointBreaks = team_points_16_25 |>
+  distinct(row_number(), .keep_all = TRUE) |>
+  pull(total_points) |>
+  classIntervals(n = 3, style = "jenks")
+
+team_points_16_25 = team_points_16_25 |>
+  mutate(bins = cut(total_points,
+               breaks = pointBreaks$brks,
+               include.lowest = TRUE,
+               labels = c("bottom_teams", "mid_field", "top_teams"))) |>
+  rename(team_group = bins) |>
+  select(-c(total_races, total_wins, laps_led, avg_finish))
+
+nascar_data = left_join(nascar_data,team_points_16_25, by = c("Team", "Season")) 
+
+nascar_data = nascar_data |>
+  rename(total_team_points = total_points)
+
+require(gt)
+team_points_16_25 |>
+  group_by(team_group) |>
+  summarise(
+    Team_Count = n(),
+    Min_Points = min(total_points, na.rm = TRUE),
+    Max_Points = max(total_points, na.rm = TRUE),
+    Avg_Points = mean(total_points, na.rm = TRUE)
+  ) |>
+  gt()
+pointBreaks
+# Team_count matches with the output when "pointBreaks" runs 
+
 
 #loading driver info for 2016-2025
 full_series_data = load_series("cup") |>
@@ -279,7 +313,10 @@ nascar.mod2 = gam(points~ s(Age) + s(Driver, bs= "re") + s(years_at_team),
                   data = nascar_data, method = "REML")
 summary(nascar.mod2)
 
-nascar.mod3 = gam(points~s(Age))
+nascar.mod3 = gam(points~s(Age) + s(Driver, bs = "re") + 
+                    s(years_at_team) + s(team_group, bs = "re"),
+                  data = nascar_data, method = "REML")
+summary(nascar.mod3)
 
 #need to get years at team and number of teams, and driver age
 
