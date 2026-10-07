@@ -386,13 +386,6 @@ require(httr2)
 require(httr)
 require(jsonlite)
 
-
-req = request("https://api.motogp.pulselive.com/motogp/v1")
-req
-
-resp = req_perform(req)
-resp
-
 httr::GET("https://api.motogp.pulselive.com/motogp/v1")
 
 seasons = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/seasons")
@@ -409,10 +402,40 @@ categories25 = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/cat
 categories25 = content(categories25, as = "text", encoding = "UTF-8") |>
   fromJSON()
 
-##Change the below code.
-season_uuid = motogp_seasons |>
-  distinct(id) |>
-  pull(id)
+motogp_category = categories25 |>
+  filter(name == "MotoGP™")
 
-events = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/events", 
-                   query = list(seasonUuid = season_uuid))
+#getting standings for just 2025 and then going to try to loop if it works
+motogp_standings25 = httr::GET(
+  paste0(
+    "https://api.motogp.pulselive.com/motogp/v1/results/standings?",
+    "seasonUuid=", motogp_seasons$id[1],
+    "&categoryUuid=", motogp_category$id[1]))
+
+motogp_standings25 = content(motogp_standings25, as = "text", encoding = "UTF-8") |>
+  fromJSON()
+
+view(motogp_standings25)
+
+motogp_data = map_dfr(
+  motogp_seasons$id, function(season_id){
+    categories = GET(
+      "https://api.motogp.pulselive.com/motogp/v1/results/categories",
+      query = list(seasonUuid = season_id)) |>
+      content(as = "text", encoding = "UTF-8") |>
+      fromJSON()
+    
+    motogp_categories = categories |>
+      filter(name == "MotoGP™") |>
+      pull(id)
+    
+    standings = GET(
+      "https://api.motogp.pulselive.com/motogp/v1/results/standings",
+      query = list(seasonUuid = season_id, categoryUuid = motogp_categories)) |>
+      content(as = "text", encoding = "UTF-8") |>
+      fromJSON()
+    
+    standings$classification})
+
+view(motogp_data)
+
