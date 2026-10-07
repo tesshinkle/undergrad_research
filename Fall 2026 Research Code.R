@@ -156,7 +156,7 @@ model.f1_cv.results = cv::cv(model.f1, criterion = rmse, k = 10,
 summary(model.f1_cv.results)
 
 f1cv.ratio = (model.f1_cv.results[["CV crit"]])/(model.f1_cv.results[["full crit"]])
-f1cv.ratio #ration slightly larger than 1
+f1cv.ratio #ratio slightly larger than 1
 
 lmemod.f1 = f1lmermod
 lmef1.model_cv.results = cv::cv(lmemod.f1, criterion = rmse, k = 10,
@@ -318,6 +318,11 @@ nascar.mod3 = gam(points~s(Age) + s(Driver, bs = "re") +
                   data = nascar_data, method = "REML")
 summary(nascar.mod3)
 
+nascar.lmer = lmer(points ~ Age + (1| Driver) +
+                     years_at_team + (1|team_group),
+                   data=nascar_data)
+summary(nascar.lmer)
+
 #need to get years at team and number of teams, and driver age
 
 nascar.mod2.cv_results = cv(nascar.mod2, criterion = rmse, k = 10,
@@ -328,6 +333,22 @@ summary(nascar.mod2.cv_results)
 
 nascarcv.ratio = nascar.mod2.cv_results[["CV crit"]]/nascar.mod2.cv_results[["full crit"]]
 nascarcv.ratio # more overfitting than f1 cv but still need to add variables.
+
+nascar.mod3.cv_results = cv(nascar.mod3, criterion = rmse, k = 10,
+                            clusterVariables = "Driver",
+                            predict.clusters.args = list(allow.new.levels = TRUE), 
+                            seed = 1062026)
+summary(nascar.mod3.cv_results)
+
+nascargamcv.ratio = nascar.mod3.cv_results[["CV crit"]]/nascar.mod3.cv_results[["full crit"]]
+nascargamcv.ratio
+
+nascar.lmer_cv.results = cv(nascar.lmer, criterion = rmse, k = 10,
+                            clusterVariables = "Driver", seed = 10626)
+summary(nascar.lmer_cv.results)
+
+nascar.lmer_cv.ratio = nascar.lmer_cv.results[["CV crit"]]/nascar.lmer_cv.results[["full crit"]]
+nascar.lmer_cv.ratio
 
 
 ##Third Motorsport----
