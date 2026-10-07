@@ -89,6 +89,7 @@ plot_smooth(F1.gam4, view="age",rm.ranef = FALSE,cond=list(name="Verstappen"),ma
 plot_smooth(F1.gam4, view="age",rm.ranef = FALSE,cond=list(name="Vettel"),main="intercept + s(age) + s(name)",col="darkgreen", add=TRUE,se=FALSE,lwd=3)
 plot_smooth(F1.gam4, view="age",rm.ranef = FALSE,cond=list(name="Latifi"),main="intercept+s(age)+s(name)", col= "purple3",add=TRUE,se=FALSE,lwd=3)
 
+
 require(ggeffects)
 
 set.seed(6)
