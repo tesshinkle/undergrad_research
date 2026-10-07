@@ -122,9 +122,22 @@ f1.mod2 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + s(constr
 summary(f1.mod2) #separating by teams themselves does not explain the deviance better
 
 f1.mod3 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
-                s(constructor_group, bs= "re") + years_at_team,
+                s(constructor_group, bs= "re") + years_at_team ,
               data = champ_data_16_25, method = "REML")
-summary(f1.mod3) 
+summary(f1.mod3)
+
+## When constructor Group is added in as a variable it creates 
+#the nearly horizontal line and makes driver_id a non-significant predictor
+f1.mod4 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
+                s(driver_id, Season, bs = "re") + s(years_at_team, k = 4),
+              data = champ_data_16_25, method = "REML")
+summary(f1.mod4)
+
+
+#Model Pulled from Spring 2026 Research code
+#F1.gam4 = gam(points~s(age)+s(name,bs="re")+s(Season,bs="re")+s(age,name,bs="re")+s(name,Season,bs="re"),data=F1_data_s25,method="REML")
+#summary(F1.gam4)
+
 #years_at_team is a significant predictor however it lowers 
 #deviance explained but by only 0.2%
 
@@ -181,6 +194,12 @@ f1lmcv.ratio
 #y <- Pima.te$type
 #caret::confusionMatrix(yhat,y)
 
+###F1 Plotting----
+
+require(itsadug)
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
+
+plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
 
 ##NASCAR data----
 
@@ -318,6 +337,10 @@ nascar.mod3 = gam(points~s(Age) + s(Driver, bs = "re") +
                   data = nascar_data, method = "REML")
 summary(nascar.mod3)
 
+nascar.mod4 = gam(points~s(Age) + s(Driver, bs = "re") + s(years_at_team),
+                  data = nascar_data, method = "REML")
+summary(nascar.mod4)
+
 nascar.lmer = lmer(points ~ Age + (1| Driver) +
                      years_at_team + (1|team_group),
                    data=nascar_data)
@@ -350,6 +373,12 @@ summary(nascar.lmer_cv.results)
 nascar.lmer_cv.ratio = nascar.lmer_cv.results[["CV crit"]]/nascar.lmer_cv.results[["full crit"]]
 nascar.lmer_cv.ratio
 
+###NASCAR Plotting----
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+
+#creates a smaller confidence band when team_group is removed from model. 
+plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
 
 ##Third Motorsport----
 # Either Indycar or MotoGP data (from an API)
