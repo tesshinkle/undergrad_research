@@ -439,3 +439,36 @@ motogp_data = map_dfr(
 
 view(motogp_data)
 
+motogp_data = motogp_data |>
+  unnest(rider, names_sep = "_") |>
+  unnest(team, names_sep = "_") |>
+  unnest(constructor, names_sep = "_") |>
+  unnest(rider_country, names_sep = "_") |>
+  unnest(team_season, names_sep = "_") 
+
+motogp_data = motogp_data |>
+  unnest(last_positions, names_sep = "_") |>
+  unnest(sprint_last_positions, names_sep = "_")
+
+str(motogp_data)
+
+motogp_riders = motogp_data |>
+  select(rider_id, rider_full_name, rider_legacy_id, rider_riders_api_uuid, rider_riders_id )
+
+motogp_rider_info = map_dfr(motogp_riders$rider_riders_id[1], function(id){
+    response = GET(paste0("https://api.motogp.pulselive.com/motogp/v1/riders/",
+        id))
+    
+    content(response, as = "text", encoding = "UTF-8") |>
+      fromJSON(flatten = TRUE)})
+
+view(motogp_rider_info)
+
+id = motogp_riders$rider_riders_api_uuid[1]
+
+response = GET(
+  paste0(
+    "https://api.motogp.pulselive.com/motogp/v1/riders/",
+    id))
+
+status_code(response)
