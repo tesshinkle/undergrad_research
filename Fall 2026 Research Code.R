@@ -201,6 +201,8 @@ plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
 
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
 
+
+
 ##NASCAR data----
 
 series_data = load_series("cup") |>
@@ -455,20 +457,42 @@ str(motogp_data)
 motogp_riders = motogp_data |>
   select(rider_id, rider_full_name, rider_legacy_id, rider_riders_api_uuid, rider_riders_id )
 
-motogp_rider_info = map_dfr(motogp_riders$rider_riders_id[1], function(id){
-    response = GET(paste0("https://api.motogp.pulselive.com/motogp/v1/riders/",
-        id))
+motogp_rider_info = map_dfr(motogp_riders$rider_riders_id, function(id) {
+    response = GET(paste0("https://api.motogp.pulselive.com/motogp/v1/riders/",id))
     
-    content(response, as = "text", encoding = "UTF-8") |>
-      fromJSON(flatten = TRUE)})
+    rider_json = content(response, as = "text", encoding = "UTF-8")
+    
+    rider = fromJSON(rider_json, simplifyVector = FALSE)
+    
+    rider_id = rider$id %||% NA
+    rider_name = rider$name %||% NA_character_
+    rider_surname = rider$surname %||% NA_character_
+    birth_date = rider$birth_date %||% NA_character_
+    
+    career = rider$career %||% list()
+    
+    if (length(career) == 0) {
+      career = list(list(
+        season = NA,
+        team = list(name = NA_character_),
+        category = list(name = NA_character_)))}
+    
+    map_dfr(career, function(c) {
+      tibble(
+        rider_id = as.character(rider_id),
+        name = rider_name,
+        surname = rider_surname,
+        birth_date = birth_date,
+        season = c$season %||% NA,
+        team_name = c$team$name %||% NA_character_,
+        category_name = c$category$name %||% NA_character_)})})
 
-view(motogp_rider_info)
+View(motogp_rider_info)
 
-id = motogp_riders$rider_riders_api_uuid[1]
+motogp_rider_info = motogp_rider_info |>
+  filter(season >= 2016 & season <= 2025) |>
+  filter( category_name == "MotoGP") |>
+  mutate(age = (season - as.numeric(format(as.Date(birth_date), "%Y")))) |>
+  unite(motogp_rider_info, col = "rider_full_name", name, surname, sep = " ")
 
-response = GET(
-  paste0(
-    "https://api.motogp.pulselive.com/motogp/v1/riders/",
-    id))
-
-status_code(response)
+summary(motogp_rider_info$age)
