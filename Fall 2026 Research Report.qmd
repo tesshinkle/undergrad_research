@@ -11,24 +11,68 @@ Idea One:\
 I want to continue what I did in the spring with either more sports and comparing the ages with best success while also implementing training and testing with my past model as well as checking accuracy of my past model (AUC, ROC, Confusion Matrix, etc.) I also want to add variables into my F1 model from the spring such as how often a driver switched teams( whether they've been on one team their entire career or like 5). Also I want to add in the variable of the length they stay at each team, whether thats the average or some other measure.
 
 Idea Two:\
-If I finish that early I do want to start looking back on what I was attempting to do Spring 2025. Where I was trying to predict the number of pitstops in a race. I think I have a better handle on handling the API and just APIs in general. Also AWS came out with an arcticle about how they created something similar. Of course it's with proprietary data so I think it would be interesting if I could recreate it with public data, or recreate it as close as possible. 
+If I finish that early I do want to start looking back on what I was attempting to do Spring 2025. Where I was trying to predict the number of pitstops in a race. I think I have a better handle on handling the API and just APIs in general. Also AWS came out with an arcticle about how they created something similar. Of course it's with proprietary data so I think it would be interesting if I could recreate it with public data, or recreate it as close as possible.
 
 Ultimately, I do want to start using the F1dataR package and API more and potentially other sport APIs if i go with idea number one.
 
-## Starting Code
-
-I am doing a quarto document because I feel like I can better discuss my insights and graphs through this but will have a raw code script because I only want my final code in this quarto document
-
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
+
 require(f1dataR)
+require(nascaR.data)
+require(tidyverse)
+require(mgcv)
+require(caret)
+require(lme4)
+
+theme_set(theme_bw())
 ```
 
-You can add options to executable code like this
+## Formula One Analysis
 
 ```{r}
 #| echo: false
-2 * 2
+#| message: false
+#| warning: false
+champ_data = bind_rows(lapply(2016:2025, function(x) {
+    load_standings( season = x, round = "last", type = "driver") |>
+      mutate(season = x)
+  }))
+
+driver_info = bind_rows(lapply(2016:2025, function(x) {
+  load_drivers(season = x) |>
+    mutate(season = x) |>
+    select(driver_id, nationality, date_of_birth, season)
+}))
+
+champ_data_16_25 = left_join(champ_data, driver_info, by = c("driver_id", "season")) |>
+  mutate(driver_age = (season - as.numeric(format(as.Date(date_of_birth), "%Y")))) |>
+  mutate(Season=season-2015) |>
+  mutate(points = as.numeric(points))
+
+constructor_data = bind_rows(lapply(2016:2025, function(x){
+  load_standings(season = x, round = "last", type = "constructor") |>
+    mutate(season = x)
+  }))
+
+champ_data_16_25 = left_join(champ_data_16_25, constructor_data, by = c("constructor_id", "season")) |>
+  rename(driver_points = points.x, driver_position = position.x,
+         driver_wins = wins.x, constructor_pos = position.y,
+         constructor_points = points.y, constructor_wins = wins.y)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+The scatter plot below demonstrates the relationship between Formula One driver's age and the points they get in a season
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+champ_data_16_25 |>
+  ggplot(aes(driver_age, driver_points)) + geom_jitter(alpha = 0.5, size = 3)
+```
+
+## NASCAR Analysis
+
+## MotoGP Analysis
