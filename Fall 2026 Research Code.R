@@ -457,7 +457,12 @@ str(motogp_data)
 motogp_riders = motogp_data |>
   select(rider_id, rider_full_name, rider_legacy_id, rider_riders_api_uuid, rider_riders_id )
 
-motogp_rider_info = map_dfr(motogp_riders$rider_riders_id, function(id) {
+rider_ids = motogp_riders |>
+  pull(rider_riders_id) |>
+  unique() |>
+  na.omit()
+
+motogp_rider_info = map_dfr(rider_ids, function(id) {
     response = GET(paste0("https://api.motogp.pulselive.com/motogp/v1/riders/",id))
     
     rider_json = content(response, as = "text", encoding = "UTF-8")
@@ -492,7 +497,42 @@ View(motogp_rider_info)
 motogp_rider_info = motogp_rider_info |>
   filter(season >= 2016 & season <= 2025) |>
   filter( category_name == "MotoGP") |>
-  mutate(age = (season - as.numeric(format(as.Date(birth_date), "%Y")))) |>
-  unite(motogp_rider_info, col = "rider_full_name", name, surname, sep = " ")
+  mutate(age = (season - as.numeric(format(as.Date(birth_date), "%Y"))))|>
+  unite(col = "rider_full_name", name, surname, sep = " ")
 
 summary(motogp_rider_info$age)
+
+motogp_rider_points = motogp_data |>
+  select(rider_riders_id, rider_full_name, team_season_year,
+         points, race_wins, podiums) |>
+  rename(season = team_season_year) |>
+  rename(rider_id = rider_riders_id)
+
+motogp = left_join(motogp_rider_info, motogp_rider_points, by = c("rider_id", "season")) |>
+  drop_na() |>
+  select(-c("rider_full_name.y"))
+
+summary(motogp$age)
+str(motogp)
+
+motogp = motogp |>
+  mutate(rider_full_name = as.factor(rider_full_name.x)) |>
+  mutate(team_name = as.factor(team_name))
+
+motogp_longevity = motogp |>
+  group_by(rider_full_name, team_name) |>
+  summarize(years_at_team = n() , .groups = "drop")|>
+  ungroup()
+
+motogp = left_join(motogp, motogp_longevity, by= c("team_name", "rider_full_name"))
+
+
+
+motogp_mod = gam(points~ s(age) + s(rider_full_name, bs = "re"), 
+                 data = motogp, method = "REML")
+summary(motogp_mod)
+
+motogp_mod2 = gam(points~ s(age) + s(rider_full_name, bs = "re") + 
+                    s(years_at_team, k = 5), 
+                 data = motogp, method = "REML")
+summary(motogp_mod2)
