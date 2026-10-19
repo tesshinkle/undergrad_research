@@ -526,6 +526,8 @@ motogp_longevity = motogp |>
 
 motogp = left_join(motogp, motogp_longevity, by= c("team_name", "rider_full_name"))
 
+motogp |>
+  ggplot(aes(age, points)) + geom_jitter()
 
 
 motogp_mod = gam(points~ s(age) + s(rider_full_name, bs = "re"), 
@@ -536,3 +538,5 @@ motogp_mod2 = gam(points~ s(age) + s(rider_full_name, bs = "re") +
                     s(years_at_team, k = 5), 
                  data = motogp, method = "REML")
 summary(motogp_mod2)
+
+plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600))
