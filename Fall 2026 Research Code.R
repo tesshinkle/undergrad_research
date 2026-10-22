@@ -627,9 +627,12 @@ plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3
 plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="darkorchid2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
 par(pty = "m")
 
+
 #fitting the three motor-sport model plots (without constructor groups) and scaling the coordinates
 par(pty = "s")
 plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE, lty = "dashed")
 plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), add = TRUE, lty = "dotted")
 par(pty = "m")
+
+## get team data to make model and graphs
