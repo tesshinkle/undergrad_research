@@ -410,6 +410,16 @@ summary(nascar.mod3.cv_results)
 nascargamcv.ratio = nascar.mod3.cv_results[["CV crit"]]/nascar.mod3.cv_results[["full crit"]]
 nascargamcv.ratio
 
+nascar.mod4.cv_results = cv(nascar.mod4, criterion = rmse, k = 10,
+                            clusterVariables = "Driver",
+                            predict.clusters.args = list(allow.new.levels = TRUE), 
+                            seed = 1062026)
+summary(nascar.mod4.cv_results)
+
+nascargam2cv.ratio = nascar.mod4.cv_results[["CV crit"]]/nascar.mod4.cv_results[["full crit"]]
+nascargam2cv.ratio
+
+
 nascar.lmer_cv.results = cv(nascar.lmer, criterion = rmse, k = 10,
                             clusterVariables = "Driver", seed = 10626)
 summary(nascar.lmer_cv.results)
@@ -420,9 +430,37 @@ nascar.lmer_cv.ratio
 ###NASCAR Plotting----
 
 plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(driver_id)",col="blue", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(driver_id)",col="purple", add=TRUE,se=TRUE, lwd=3)
+
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(driver)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams", years_at_team = 1),main="intercept + s(Age) + s(driver)",col="firebrick", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams", years_at_team = 4.171),main="intercept + s(age) + s(driver)",col="deeppink3", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams", years_at_team = 10),main="intercept + s(age) + s(driver)",col="coral2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field", years_at_team = 1),main="intercept + s(age) + s(driver)",col="cadetblue2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field", years_at_team = 4.171),main="intercept + s(age) + s(driver)",col="deepskyblue", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field", years_at_team = 10),main="intercept + s(age) + s(driver)",col="steelblue", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(driver)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams", years_at_team = 1),main="intercept + s(age) + s(driver)",col="mediumpurple", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams", years_at_team = 4.171),main="intercept + s(age) + s(driver)",col="magenta3", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams", years_at_team = 10),main="intercept + s(age) + s(driver)",col="orchid4", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
 
 #creates a smaller confidence band when team_group is removed from model. 
 plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE)
+
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1000))
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,1000), add = TRUE)
 
 ##Third Motorsport----
 # Either Indycar or MotoGP data (from an API)
@@ -581,4 +619,17 @@ motogp_mod2 = gam(points~ s(age) + s(rider_full_name, bs = "re") +
                  data = motogp, method = "REML")
 summary(motogp_mod2)
 
-plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600))
+###MotoGP Plotting----
+par(pty = "s")
+plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), main = "Moto GP model with years at team effect shown")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3.02),main="intercept + s(age) + s(rider_full_name)",col="blue2", add=TRUE,se=FALSE, lwd=3, lty = "dotted")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="darkorchid2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+par(pty = "m")
+
+#fitting the three motor-sport model plots (without constructor groups) and scaling the coordinates
+par(pty = "s")
+plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE, lty = "dashed")
+plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), add = TRUE, lty = "dotted")
+par(pty = "m")
