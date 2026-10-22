@@ -171,6 +171,17 @@ summary(model.f1_cv.results)
 f1cv.ratio = (model.f1_cv.results[["CV crit"]])/(model.f1_cv.results[["full crit"]])
 f1cv.ratio #ratio slightly larger than 1
 
+f1.mod4_cv.results = cv::cv(f1.mod4, criterion = rmse, k = 10, 
+                             clusterVariables = "driver_id", 
+                             predict.clusters.args = list(allow.new.levels = TRUE),
+                             seed = 92526)
+
+summary(f1.mod4_cv.results)
+
+f1mod4cv.ratio = (f1.mod4_cv.results[["CV crit"]])/(f1.mod4_cv.results[["full crit"]])
+f1mod4cv.ratio
+
+
 lmemod.f1 = f1lmermod
 lmef1.model_cv.results = cv::cv(lmemod.f1, criterion = rmse, k = 10,
                                 clusterVariables = "driver_id",
@@ -197,9 +208,40 @@ f1lmcv.ratio
 ###F1 Plotting----
 
 require(itsadug)
-plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
 
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="top_three"),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="mid_field"),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="bottom_field"),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+
+
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="top_three"),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="top_three", years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="firebrick", add=TRUE,se=FALSE, lwd=2, lty = "dashed")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="top_three", years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="deeppink3", add=TRUE,se=FALSE, lwd=2, lty = "dotted")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="top_three", years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="coral2", add=TRUE,se=FALSE, lwd=2, lty = "dotted")
+
+
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="mid_field"),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="mid_field", years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="cadetblue2", add=TRUE,se=FALSE, lwd=2, lty = "dashed")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="mid_field", years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="deepskyblue", add=TRUE,se=FALSE, lwd=2, lty = "dotted")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="mid_field", years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="steelblue", add=TRUE,se=FALSE, lwd=2, lty = "dotted")
+
+
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600), lwd = 4)
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="bottom_field"),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="bottom_field",years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="mediumpurple", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="bottom_field",years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="magenta3", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(f1.mod3, view="driver_age",rm.ranef = FALSE,cond=list(constructor_group="bottom_field",years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="orchid4", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+
+
+#plots of model 4 (without constructor group)
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+
 
 
 
