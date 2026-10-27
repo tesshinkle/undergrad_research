@@ -592,11 +592,14 @@ motogp = left_join(motogp_rider_info, motogp_rider_points, by = c("rider_id", "s
   drop_na() |>
   select(-c("rider_full_name.y"))
 
+motogp = motogp |>
+  rename(rider_full_name = rider_full_name.x)
+
 summary(motogp$age)
 str(motogp)
 
 motogp = motogp |>
-  mutate(rider_full_name = as.factor(rider_full_name.x)) |>
+  mutate(rider_full_name = as.factor(rider_full_name)) |>
   mutate(team_name = as.factor(team_name))
 
 motogp_longevity = motogp |>
@@ -616,32 +619,30 @@ motogp = left_join(motogp, motogp_team_standings, by = c("team_name", "season"))
 
 #Jenks clustering for team category
 set.seed(1026)
-pointBreaks = motogp |>
+pointBreaks = motogp_team_standings |>
   distinct(row_number(), .keep_all = TRUE) |>
   pull(total_team_points) |>
   classIntervals(n = 3, style = "jenks")
 
 ## finish
-motogpteam_categories = motogp |>
-  mutate(bins = cut(total_points,
+motogpteam_categories = motogp_team_standings |>
+  mutate(bins = cut(total_team_points,
                     breaks = pointBreaks$brks,
                     include.lowest = TRUE,
                     labels = c("bottom_teams", "mid_field", "top_teams"))) |>
   rename(team_group = bins) |>
-  select(-c(total_races, total_wins, laps_led, avg_finish))
+  select(c(team_name, team_group, season))
 
-nascar_data = left_join(nascar_data,team_points_16_25, by = c("Team", "Season")) 
+motogp = left_join(motogp,motogpteam_categories, by = c("team_name", "season"))
 
-nascar_data = nascar_data |>
-  rename(total_team_points = total_points)
 
-team_points_16_25 |>
+motogp |>
   group_by(team_group) |>
   summarise(
     Team_Count = n(),
-    Min_Points = min(total_points, na.rm = TRUE),
-    Max_Points = max(total_points, na.rm = TRUE),
-    Avg_Points = mean(total_points, na.rm = TRUE)
+    Min_Points = min(total_team_points, na.rm = TRUE),
+    Max_Points = max(total_team_points, na.rm = TRUE),
+    Avg_Points = mean(total_team_points, na.rm = TRUE)
   ) |>
   gt()
 pointBreaks
@@ -660,6 +661,12 @@ motogp_mod2 = gam(points~ s(age) + s(rider_full_name, bs = "re") +
                  data = motogp, method = "REML")
 summary(motogp_mod2)
 
+motogp_mod3 = gam(points~ s(age) + s(rider_full_name, bs = "re") + 
+                    s(years_at_team, k = 5) + s(team_group, bs = "re"), 
+                  data = motogp, method = "REML")
+summary(motogp_mod3)
+
+
 ###MotoGP Plotting----
 par(pty = "s")
 plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), main = "Moto GP model with years at team effect shown")
@@ -669,11 +676,22 @@ plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8
 par(pty = "m")
 
 
+plot_smooth(motogp_mod3, view = "age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(rider_full_name)",col="blue", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(rider_full_name)",col="purple", add=TRUE,se=TRUE, lwd=3)
+
+
+
 #fitting the three motor-sport model plots (without constructor groups) and scaling the coordinates
+par(mfrow=c(1,2))
 par(pty = "s")
-plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
+plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500), main = "Motorsport models without team grouping effect")
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE, lty = "dashed")
 plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), add = TRUE, lty = "dotted")
+
+plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500), main = "Motorsport models with team grouping effect")
+plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE, lty = "dashed")
+plot_smooth(motogp_mod3, view = "age", rm.ranef = TRUE, ylim = c(-100,600), add = TRUE, lty = "dotted")
 par(pty = "m")
 
-## get team data to make model and graphs
