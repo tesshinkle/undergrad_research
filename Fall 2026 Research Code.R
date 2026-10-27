@@ -468,7 +468,7 @@ require(httr2)
 require(httr)
 require(jsonlite)
 
-httr::GET("https://api.motogp.pulselive.com/motogp/v1")
+#httr::GET("https://api.motogp.pulselive.com/motogp/v1")
 
 seasons = httr::GET("https://api.motogp.pulselive.com/motogp/v1/results/seasons")
 
@@ -605,6 +605,47 @@ motogp_longevity = motogp |>
   ungroup()
 
 motogp = left_join(motogp, motogp_longevity, by= c("team_name", "rider_full_name"))
+
+#trying to get team data
+
+motogp_team_standings = motogp |>
+  group_by(season, team_name) |>
+  summarize(total_team_points = sum(points, na.rm = TRUE), .groups = "drop")
+
+motogp = left_join(motogp, motogp_team_standings, by = c("team_name", "season"))
+
+#Jenks clustering for team category
+set.seed(1026)
+pointBreaks = motogp |>
+  distinct(row_number(), .keep_all = TRUE) |>
+  pull(total_team_points) |>
+  classIntervals(n = 3, style = "jenks")
+
+## finish
+motogpteam_categories = motogp |>
+  mutate(bins = cut(total_points,
+                    breaks = pointBreaks$brks,
+                    include.lowest = TRUE,
+                    labels = c("bottom_teams", "mid_field", "top_teams"))) |>
+  rename(team_group = bins) |>
+  select(-c(total_races, total_wins, laps_led, avg_finish))
+
+nascar_data = left_join(nascar_data,team_points_16_25, by = c("Team", "Season")) 
+
+nascar_data = nascar_data |>
+  rename(total_team_points = total_points)
+
+team_points_16_25 |>
+  group_by(team_group) |>
+  summarise(
+    Team_Count = n(),
+    Min_Points = min(total_points, na.rm = TRUE),
+    Max_Points = max(total_points, na.rm = TRUE),
+    Avg_Points = mean(total_points, na.rm = TRUE)
+  ) |>
+  gt()
+pointBreaks
+
 
 motogp |>
   ggplot(aes(age, points)) + geom_jitter()
