@@ -73,6 +73,10 @@ champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points)) + geom_jitter(alpha = 0.5, size = 3)
 ```
 
+
+$$ \text{Points} = \alpha  + \text{u}_{\text{Driver}_i} + \text{v}_{\text{Team Group}_i}+ f_1(\text{Age}_i) + f_2(\text{Years At Team}_i) + \epsilon_i $$
+
+
 ## NASCAR Analysis
 
 ## MotoGP Analysis
