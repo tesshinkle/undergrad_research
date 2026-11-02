@@ -55,7 +55,9 @@ champ_data_16_25 |>
 
 #another version of the scatter plot from above
 champ_data_16_25 |>
-  ggplot(aes(driver_age, driver_points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3)
+  ggplot(aes(driver_age, driver_points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
+  labs(title = "Scatterplot of the Relationship Between Age and Success in F1", 
+       x = "Age" , y = "Points")
 
 
 champ_data_16_25 |>
@@ -162,15 +164,34 @@ summary(f1.mod3)
 ## When constructor Group is added in as a variable it creates 
 #the nearly horizontal line and makes driver_id a non-significant predictor
 f1.mod4 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
-                s(driver_id, Season, bs = "re") + s(years_at_team, k = 4),
+                s(years_at_team, k = 4),
               data = champ_data_16_25, method = "REML")
 summary(f1.mod4)
+
+tidy(f1.mod4) |>
+  gt() |>
+  tab_header(
+    title = "F1 Model without Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
 
 
 f1.mod5 = gam(driver_points ~ s(driver_age) + s(driver_id, bs = "re") + 
                 s(team_group, bs= "re") + s(years_at_team, k = 4) ,
               data = champ_data_16_25, method = "REML")
-summary(f1.mod5)
+summary(f1.mod5) 
+
+tidy(f1.mod5) |>
+  gt() |>
+  tab_header(
+    title = "F1 Model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 
 #Model Pulled from Spring 2026 Research code
 #F1.gam4 = gam(points~s(age)+s(name,bs="re")+s(Season,bs="re")+s(age,name,bs="re")+s(name,Season,bs="re"),data=F1_data_s25,method="REML")
@@ -216,6 +237,18 @@ f1.mod4_cv.results = cv::cv(f1.mod4, criterion = rmse, k = 10,
 
 summary(f1.mod4_cv.results)
 
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(80.79823, 63.78785)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For F1 model without Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 f1mod4cv.ratio = (f1.mod4_cv.results[["CV crit"]])/(f1.mod4_cv.results[["full crit"]])
 f1mod4cv.ratio
 
@@ -226,6 +259,18 @@ f1.mod5_cv.results = cv::cv(f1.mod5, criterion = rmse, k = 10,
 
 summary(f1.mod5_cv.results)
 
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(54.89409, 47.25581)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For F1 model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 
 lmemod.f1 = f1lmermod
 lmef1.model_cv.results = cv::cv(lmemod.f1, criterion = rmse, k = 10,
@@ -235,6 +280,7 @@ summary(lmef1.model_cv.results)
 
 f1lmecv.ratio = (lmef1.model_cv.results[["CV crit"]])/(lmef1.model_cv.results[["full crit"]])
 f1lmecv.ratio
+
 
 #error in trying to get cv for linear model
 #lm.f1 = f1lmmod
@@ -264,6 +310,13 @@ plot_smooth(f1.mod5, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600), m
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("Top teams", "Mid-field teams", "Bottom teams"),
+       col = c("red2", "blue2", "darkorchid2"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 
 
 plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600))
@@ -296,12 +349,25 @@ plot_smooth(f1.mod5, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600), m
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
 plot_smooth(f1.mod5, view="driver_age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
-
+legend("topright",
+       legend = c("Top teams", "Mid-field teams", "Bottom teams"),
+       col = c("red2", "blue2", "darkorchid2"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600), main = "F1 model without team effects")
 plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
 plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
 plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("One Year", "Mean Years (3.6)", "Ten Years"),
+       col = c("red2", "blue2", "darkorchid2"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 par(pty = "m")
 
 
@@ -432,6 +498,11 @@ str(nascar_data)
 
 #Trying to get manufacturer data
 
+nascar_data |>
+  ggplot(aes(Age, points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
+  labs(title = "Relationship Between Age and Success in NASCAR", 
+       x = "Age" , y = "Points")
+
 
 ###NASCAR modeling----
 nascar.mod = gam(points~ s(Age) + s(Driver, bs= "re"), 
@@ -447,9 +518,27 @@ nascar.mod3 = gam(points~s(Age) + s(Driver, bs = "re") +
                   data = nascar_data, method = "REML")
 summary(nascar.mod3)
 
+tidy(nascar.mod3) |>
+  gt() |>
+  tab_header(
+    title = "NASCAR Model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 nascar.mod4 = gam(points~s(Age) + s(Driver, bs = "re") + s(years_at_team),
                   data = nascar_data, method = "REML")
 summary(nascar.mod4)
+
+tidy(nascar.mod4) |>
+  gt() |>
+  tab_header(
+    title = "NASCAR Model without Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
 
 nascar.lmer = lmer(points ~ Age + (1| Driver) +
                      years_at_team + (1|team_group),
@@ -471,7 +560,21 @@ nascar.mod3.cv_results = cv(nascar.mod3, criterion = rmse, k = 10,
                             clusterVariables = "Driver",
                             predict.clusters.args = list(allow.new.levels = TRUE), 
                             seed = 1062026)
-summary(nascar.mod3.cv_results)
+summary(nascar.mod3.cv_results) 
+
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(189.8896, 148.6050)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For NASCAR model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
+
 
 nascargamcv.ratio = nascar.mod3.cv_results[["CV crit"]]/nascar.mod3.cv_results[["full crit"]]
 nascargamcv.ratio
@@ -481,6 +584,18 @@ nascar.mod4.cv_results = cv(nascar.mod4, criterion = rmse, k = 10,
                             predict.clusters.args = list(allow.new.levels = TRUE), 
                             seed = 1062026)
 summary(nascar.mod4.cv_results)
+
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(205.2301, 153.8671)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For NASCAR model without Team Effects"
+  ) |> 
+  fmt_number(
+    decimals = 3
+  )
 
 nascargam2cv.ratio = nascar.mod4.cv_results[["CV crit"]]/nascar.mod4.cv_results[["full crit"]]
 nascargam2cv.ratio
@@ -494,11 +609,18 @@ nascar.lmer_cv.ratio = nascar.lmer_cv.results[["CV crit"]]/nascar.lmer_cv.result
 nascar.lmer_cv.ratio
 
 ###NASCAR Plotting----
-
+par(pty = "s")
 plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500), main = "NASCAR with team effects")
-plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3, )
-plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(driver_id)",col="blue", add=TRUE,se=TRUE, lwd=3)
-plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(driver_id)",col="purple", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(driver_id)",col="blue", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(driver_id)",col="purple", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("Top teams", "Mid-field teams", "Bottom teams"),
+       col = c("red2", "blue2", "purple"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 
 
 plot_smooth(nascar.mod3, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500))
@@ -522,9 +644,18 @@ plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="botto
 
 #creates a smaller confidence band when team_group is removed from model. 
 plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500), main = "NASCAR without team effects")
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 1), rm.ranef = TRUE, add = TRUE, col="red2")
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 4.171), rm.ranef = TRUE,  add = TRUE, col="blue2")
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 10), rm.ranef = TRUE, add = TRUE, col="purple2")
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 1), rm.ranef = TRUE, add = TRUE, col="red2", lwd = 3)
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 4.171), rm.ranef = TRUE,  add = TRUE, col="blue2", lwd=3, lty = "dotted")
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 10), rm.ranef = TRUE, add = TRUE, col="purple2", lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("One Year", "Mean Years(4.2)", "10 Years"),
+       col = c("red2", "blue2", "darkorchid2"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
+
+par(pty = "m")
 
 
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), add = TRUE)
@@ -718,6 +849,9 @@ motogp |>
   gt()|>
   tab_header(
     title = "MotoGP Team Grouping"
+  ) |>
+  fmt_number(
+    decimals = 3
   )
 
 
@@ -725,7 +859,9 @@ pointBreaks
 
 
 motogp |>
-  ggplot(aes(age, points)) + geom_jitter()
+  ggplot(aes(age, points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
+  labs(title = "Relationship Between Age and Success in MotoGP", 
+       x = "Age" , y = "Points")
 
 
 motogp_mod = gam(points~ s(age) + s(rider_full_name, bs = "re"), 
@@ -737,25 +873,97 @@ motogp_mod2 = gam(points~ s(age) + s(rider_full_name, bs = "re") +
                  data = motogp, method = "REML")
 summary(motogp_mod2)
 
+tidy(motogp_mod2) |>
+  gt() |>
+  tab_header(
+    title = "MotoGP Model without Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 motogp_mod3 = gam(points~ s(age) + s(rider_full_name, bs = "re") + 
                     s(years_at_team, k = 5) + s(team_group, bs = "re"), 
                   data = motogp, method = "REML")
 summary(motogp_mod3)
 
+tidy(motogp_mod3) |>
+  gt() |>
+  tab_header(
+    title = "MotoGP Model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
+motogp.mod2.cv_results = cv(motogp_mod2, criterion = rmse, k = 10,
+                            clusterVariables = "Driver",
+                            predict.clusters.args = list(allow.new.levels = TRUE), 
+                            seed = 9252026)
+summary(motogp.mod2.cv_results)
+
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(80.60175, 68.19756)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For MotoGP model without Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
+motogpcv.ratio = motogp.mod2.cv_results[["CV crit"]]/nascar.mod2.cv_results[["full crit"]]
+motogpcv.ratio
+
+
+motogp.mod3.cv_results = cv(motogp_mod3, criterion = rmse, k = 10,
+                            clusterVariables = "Driver",
+                            predict.clusters.args = list(allow.new.levels = TRUE), 
+                            seed = 9252026)
+summary(motogp.mod3.cv_results)
+
+data.frame(
+  Metric = c("Cross-Validation (RMSE)", "Full-Sample (RMSE)"),
+  Value = c(68.66213, 57.91675)) |>
+  gt() |>
+  tab_header(
+    title = "10 Fold Cross Validation",
+    subtitle = "For MotoGP model with Team Effects"
+  ) |>
+  fmt_number(
+    decimals = 3
+  )
+
 
 ###MotoGP Plotting----
 par(pty = "s")
 plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), main = "MotoGP without team effects")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3.02),main="intercept + s(age) + s(rider_full_name)",col="blue2", add=TRUE,se=FALSE, lwd=3, lty = "dotted")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="darkorchid2", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3.02),main="intercept + s(age) + s(rider_full_name)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("One Year", "Mean Years (3)", "8 Years"),
+       col = c("red2", "blue", "purple"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 par(pty = "m")
 
 par(pty = "s")
 plot_smooth(motogp_mod3, view = "age", rm.ranef = TRUE, ylim = c(-100,600), main = "MotoGP with team effects")
-plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=FALSE, lwd=3 , lty = "dashed")
-plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(rider_full_name)",col="blue", add=TRUE,se=FALSE, lwd=3, lty = "dotted")
-plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(rider_full_name)",col="purple", add=TRUE,se=FALSE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="top_teams"),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=TRUE, lwd=3 , lty = "dashed")
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="mid_field"),main="intercept + s(age) + s(rider_full_name)",col="blue", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(motogp_mod3, view="age",rm.ranef = FALSE,cond=list(team_group="bottom_teams"),main="intercept + s(age) + s(rider_full_name)",col="purple", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+legend("topright",
+       legend = c("Top teams", "Mid-field teams", "Bottom teams"),
+       col = c("red2", "blue", "purple"),
+       lty = c("solid", "dotted", "dashed"),
+       lwd = 3,
+       cex = 0.8,
+       bty = "n")
 par(pty = "m")
 
 
