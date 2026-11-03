@@ -56,8 +56,8 @@ champ_data_16_25 |>
 #another version of the scatter plot from above
 champ_data_16_25 |>
   ggplot(aes(driver_age, driver_points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
-  labs(title = "Scatterplot of the Relationship Between Age and Success in F1", 
-       x = "Age" , y = "Points")
+  labs(title = "Relationship Between Age and Success in F1", 
+       x = "Age" , y = "Points") + stat_smooth()
 
 
 champ_data_16_25 |>
@@ -358,12 +358,12 @@ legend("topright",
        bty = "n")
 
 plot_smooth(f1.mod4, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,600), main = "F1 model without team effects")
-plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="red2", add=TRUE,se=TRUE, lwd=3)
-plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
-plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(driver_age) + s(driver_id)",col="green4", add=TRUE,se=TRUE, lwd=3)
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 3.571),main="intercept + s(driver_age) + s(driver_id)",col="goldenrod", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(f1.mod4, view="driver_age",rm.ranef = FALSE,cond=list(years_at_team = 10),main="intercept + s(driver_age) + s(driver_id)",col="deeppink3", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
 legend("topright",
        legend = c("One Year", "Mean Years (3.6)", "Ten Years"),
-       col = c("red2", "blue2", "darkorchid2"),
+       col = c("green4", "goldenrod", "deeppink3"),
        lty = c("solid", "dotted", "dashed"),
        lwd = 3,
        cex = 0.8,
@@ -501,7 +501,7 @@ str(nascar_data)
 nascar_data |>
   ggplot(aes(Age, points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
   labs(title = "Relationship Between Age and Success in NASCAR", 
-       x = "Age" , y = "Points")
+       x = "Age" , y = "Points") + stat_smooth(method = "loess") + ylim(0,1550)
 
 
 ###NASCAR modeling----
@@ -644,12 +644,12 @@ plot_smooth(nascar.mod3, view="Age",rm.ranef = FALSE,cond=list(team_group="botto
 
 #creates a smaller confidence band when team_group is removed from model. 
 plot_smooth(nascar.mod4, view = "Age", rm.ranef = TRUE, ylim = c(-100,1500), main = "NASCAR without team effects")
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 1), rm.ranef = TRUE, add = TRUE, col="red2", lwd = 3)
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 4.171), rm.ranef = TRUE,  add = TRUE, col="blue2", lwd=3, lty = "dotted")
-plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 10), rm.ranef = TRUE, add = TRUE, col="purple2", lwd=3, lty = "dashed")
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 1), rm.ranef = TRUE, add = TRUE, col="green4", lwd = 3)
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 4.171), rm.ranef = TRUE,  add = TRUE, col="goldenrod", lwd=3, lty = "dotted")
+plot_smooth(nascar.mod4, view = "Age",cond=list(years_at_team = 10), rm.ranef = TRUE, add = TRUE, col="deeppink3", lwd=3, lty = "dashed")
 legend("topright",
        legend = c("One Year", "Mean Years(4.2)", "10 Years"),
-       col = c("red2", "blue2", "darkorchid2"),
+       col = c("green4", "goldenrod", "deeppink3"),
        lty = c("solid", "dotted", "dashed"),
        lwd = 3,
        cex = 0.8,
@@ -861,7 +861,7 @@ pointBreaks
 motogp |>
   ggplot(aes(age, points)) + geom_point(position = position_jitter(), alpha=0.5, size = 3) +
   labs(title = "Relationship Between Age and Success in MotoGP", 
-       x = "Age" , y = "Points")
+       x = "Age" , y = "Points") + stat_smooth()
 
 
 motogp_mod = gam(points~ s(age) + s(rider_full_name, bs = "re"), 
@@ -940,12 +940,12 @@ data.frame(
 ###MotoGP Plotting----
 par(pty = "s")
 plot_smooth(motogp_mod2, view = "age", rm.ranef = TRUE, ylim = c(-100,600), main = "MotoGP without team effects")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(age) + s(rider_full_name)",col="red2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3.02),main="intercept + s(age) + s(rider_full_name)",col="blue2", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
-plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="darkorchid2", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 1),main="intercept + s(age) + s(rider_full_name)",col="green4", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 3.02),main="intercept + s(age) + s(rider_full_name)",col="goldenrod", add=TRUE,se=TRUE, lwd=3, lty = "dotted")
+plot_smooth(motogp_mod2, view="age",rm.ranef = FALSE,cond=list(years_at_team = 8),main="intercept + s(age) + s(rider_full_name)",col="deeppink3", add=TRUE,se=TRUE, lwd=3, lty = "dashed")
 legend("topright",
        legend = c("One Year", "Mean Years (3)", "8 Years"),
-       col = c("red2", "blue", "purple"),
+       col = c("green4", "goldenrod", "deeppink3"),
        lty = c("solid", "dotted", "dashed"),
        lwd = 3,
        cex = 0.8,
