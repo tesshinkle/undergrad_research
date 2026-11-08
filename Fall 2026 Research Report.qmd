@@ -10,11 +10,6 @@ editor: visual
 Idea One:\
 I want to continue what I did in the spring with either more sports and comparing the ages with best success while also implementing training and testing with my past model as well as checking accuracy of my past model (AUC, ROC, Confusion Matrix, etc.) I also want to add variables into my F1 model from the spring such as how often a driver switched teams( whether they've been on one team their entire career or like 5). Also I want to add in the variable of the length they stay at each team, whether thats the average or some other measure.
 
-Idea Two:\
-If I finish that early I do want to start looking back on what I was attempting to do Spring 2025. Where I was trying to predict the number of pitstops in a race. I think I have a better handle on handling the API and just APIs in general. Also AWS came out with an arcticle about how they created something similar. Of course it's with proprietary data so I think it would be interesting if I could recreate it with public data, or recreate it as close as possible.
-
-Ultimately, I do want to start using the F1dataR package and API more and potentially other sport APIs if i go with idea number one.
-
 ```{r}
 #| echo: false
 #| message: false
@@ -26,57 +21,73 @@ require(tidyverse)
 require(mgcv)
 require(caret)
 require(lme4)
+require(gt)
+
+F1_data = read.csv("Fall Data/F1_data.csv")
+motogp_data = read.csv("Fall Data/motogp_data.csv")
+nascar_data = read.csv("Fall Data/nascar_data.csv")
 
 theme_set(theme_bw())
 ```
 
-## Formula One Analysis
+## Exploratory Data Analysis
+
+The following EDA covers data in Formula One, NASCAR, and MotoGP.
+
+### Formula One
+
+The scatter plot below demonstrates the relationship between Formula One driver's age and the points they get in a season. We see a non-linear relationship between the points with a peak from the loess curve applied to the plot appearing at a little over thirty years of age.
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-champ_data = bind_rows(lapply(2016:2025, function(x) {
-    load_standings( season = x, round = "last", type = "driver") |>
-      mutate(season = x)
-  }))
-
-driver_info = bind_rows(lapply(2016:2025, function(x) {
-  load_drivers(season = x) |>
-    mutate(season = x) |>
-    select(driver_id, nationality, date_of_birth, season)
-}))
-
-champ_data_16_25 = left_join(champ_data, driver_info, by = c("driver_id", "season")) |>
-  mutate(driver_age = (season - as.numeric(format(as.Date(date_of_birth), "%Y")))) |>
-  mutate(Season=season-2015) |>
-  mutate(points = as.numeric(points))
-
-constructor_data = bind_rows(lapply(2016:2025, function(x){
-  load_standings(season = x, round = "last", type = "constructor") |>
-    mutate(season = x)
-  }))
-
-champ_data_16_25 = left_join(champ_data_16_25, constructor_data, by = c("constructor_id", "season")) |>
-  rename(driver_points = points.x, driver_position = position.x,
-         driver_wins = wins.x, constructor_pos = position.y,
-         constructor_points = points.y, constructor_wins = wins.y)
+F1_data |>
+  ggplot(aes(driver_age, driver_points)) + geom_jitter(alpha = 0.5, size = 3) + stat_smooth() + labs(title = "Relationship Between Age and Success in F1", 
+       x = "Age" , y = "Points")
 ```
-
-The scatter plot below demonstrates the relationship between Formula One driver's age and the points they get in a season
+In Formula One constructors, or teams, are often referred to as top, midfield, or bottom teams. To recreate this and not create the grouping through bias by selecting the perceived "top teams" I did a one dimensional Jenks clustering analysis on the total points a team has for each season. The number of clusters, k, were predetermined to be 3, to mimic the three groups teams are put into in F1. In the table output of the cluster groups we see that the bottom teams have minimum points of 0 and maximum points of 202. The middle teams have minimum points of 275 and maximum points of 522. The top teams have minimum points of 554 and maximum points of 860. 
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-champ_data_16_25 |>
-  ggplot(aes(driver_age, driver_points)) + geom_jitter(alpha = 0.5, size = 3)
+
+F1_data |>
+  group_by(team_group) |>
+  summarise(
+    Team_Count = n(),
+    Min_Points = min(constructor_points, na.rm = TRUE),
+    Max_Points = max(constructor_points, na.rm = TRUE),
+    Avg_Points = mean(constructor_points, na.rm = TRUE)
+  ) |>
+  gt() |>
+  tab_header(
+    title = "F1 Team Grouping"
+  )
 ```
 
+The violin plots below show the distribution of the table output from above.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+F1_data |>
+  ggplot(aes(y = constructor_points, x = team_group, col = team_group, fill = team_group)) + geom_violin(alpha = 0.5) +
+  labs(title = "Team Groups and Distribution of Points Among Them", x = "Team Group", y = "Total Team Points") + 
+  coord_flip()
+
+```
+
+### NASCAR
+
+### MotoGP
+
+## Modeling
+
+The two main models used are generalized additive models with and without a team group random effect.
 
 $$ \text{Points} = \alpha  + \text{u}_{\text{Driver}_i} + \text{v}_{\text{Team Group}_i}+ f_1(\text{Age}_i) + f_2(\text{Years At Team}_i) + \epsilon_i $$
-
-
-## NASCAR Analysis
-
-## MotoGP Analysis
