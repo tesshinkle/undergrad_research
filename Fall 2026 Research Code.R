@@ -979,3 +979,10 @@ plot_smooth(f1.mod3, view = "driver_age", rm.ranef = TRUE, ylim = c(-100,800), a
 plot_smooth(motogp_mod3, view = "age", rm.ranef = TRUE, ylim = c(-100,600), add = TRUE, lty = "dotted")
 par(pty = "m")
 
+
+
+#Saving Data----
+
+write.csv(champ_data_16_25, "F1_data.csv", row.names = FALSE)
+write.csv(nascar_data, "nascar_data.csv", row.names = FALSE)
+write.csv(motogp, "motogp_data.csv", row.names = FALSE)
